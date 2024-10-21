@@ -4,6 +4,7 @@ import eu.andreatt.ejercicioh_dein.dao.PersonaDAO;
 import eu.andreatt.ejercicioh_dein.model.Persona;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Modality;
@@ -19,6 +20,15 @@ import java.util.stream.Collectors;
 public class HelloController {
 
     @FXML
+    private Button btnAgregarPersona;
+
+    @FXML
+    private Button btnEliminar;
+
+    @FXML
+    private Button btnModificar;
+
+    @FXML
     private TableView<Persona> tabla;
 
     @FXML
@@ -32,7 +42,6 @@ public class HelloController {
 
     @FXML
     private TextField txtFiltro;
-
 
     private ObservableList<Persona> listaPersonas = FXCollections.observableArrayList();
     private PersonaDAO personaDAO = new PersonaDAO();
@@ -76,12 +85,12 @@ public class HelloController {
     }
 
     @FXML
-    public void agregarPersona() {
+    void agregarPersona(ActionEvent event)  {
         mostrarFormularioPersona(null);
     }
 
     @FXML
-    public void modificar() {
+    void modificar(ActionEvent event) {
         Persona personaSeleccionada = tabla.getSelectionModel().getSelectedItem();
         if (personaSeleccionada != null) {
             mostrarFormularioPersona(personaSeleccionada);
@@ -116,26 +125,42 @@ public class HelloController {
                     tabla.refresh();  // Asegúrate de refrescar la tabla después de actualizar
                 }
             }
-
         } catch (Exception e) {
             mostrarAlerta("Error: " + e.getMessage());
         }
     }
 
-
     @FXML
-    public void eliminar() {
+    void eliminar(ActionEvent event) {
         Persona personaSeleccionada = tabla.getSelectionModel().getSelectedItem();
         if (personaSeleccionada != null) {
+            confirmarEliminacion(event, personaSeleccionada);
             try {
                 personaDAO.eliminar(personaSeleccionada.getId());
                 listaPersonas.remove(personaSeleccionada);
             } catch (SQLException e) {
                 mostrarAlerta("Error al eliminar: " + e.getMessage());
             }
-
         } else {
             mostrarAlerta("Seleccione una persona para eliminar.");
+        }
+    }
+
+    /**
+     * Confirma la eliminación de la persona seleccionada.
+     *
+     * @param event             El evento que desencadena la acción.
+     * @param personaSeleccionada La persona que se va a eliminar.
+     */
+    private void confirmarEliminacion(ActionEvent event, Persona personaSeleccionada) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION); // Crea una alerta de confirmación
+        alert.setTitle("Confirmar eliminación"); // Título de la alerta
+        alert.setHeaderText(null); // Sin encabezado
+        alert.setContentText("¿Estás seguro de que deseas eliminar a " + personaSeleccionada.getNombre() + "?"); // Contenido de la alerta
+
+        // Muestra la alerta y espera la respuesta
+        if (alert.showAndWait().get() == ButtonType.OK) {
+            tabla.getItems().remove(personaSeleccionada); // Elimina la persona de la lista
         }
     }
 
