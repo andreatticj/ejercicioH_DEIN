@@ -83,7 +83,6 @@ public class ModalHController {
     }
 
 
-
     /**
      * Muestra una alerta de error con un mensaje específico.
      *
@@ -115,19 +114,23 @@ public class ModalHController {
      */
     @FXML
     public void guardar() {
-        String nombre = txtNombre.getText();
-        String apellidos = txtApellido.getText();
-        int edad = Integer.parseInt(txtEdad.getText());
+        String errores = verificarInfo();
+        if (errores.isEmpty()){
+            String nombre = txtNombre.getText();
+            String apellidos = txtApellido.getText();
+            int edad = Integer.parseInt(txtEdad.getText());
 
-        if (persona == null) {
-            persona = new Persona(nombre, apellidos, edad);
-        } else {
-            persona.setNombre(nombre);
-            persona.setApellidos(apellidos);
-            persona.setEdad(edad);
+            if (persona == null) {
+                persona = new Persona(nombre, apellidos, edad);
+            } else {
+                persona.setNombre(nombre);
+                persona.setApellidos(apellidos);
+                persona.setEdad(edad);
+            }
+            cerrarVentana();
+        }else{
+           mostrarAlertError(errores);
         }
-
-        cerrarVentana();
     }
 
     @FXML
