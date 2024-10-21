@@ -12,6 +12,7 @@ import javafx.stage.Stage;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.stage.Window;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -55,7 +56,7 @@ public class HelloController {
         try {
             cargarPersonas();
         } catch (SQLException e) {
-            mostrarAlerta("Error al cargar las personas: " + e.getMessage());
+            mostrarAlert(null, Alert.AlertType.ERROR,"ERROR","Error al cargar las personas: " + e.getMessage());
         }
         // Filtrar personas
         txtFiltro.textProperty().addListener((observable, oldValue, newValue) -> filtrarPersonas(newValue));
@@ -78,28 +79,49 @@ public class HelloController {
         }
     }
 
+
     private void cargarPersonas() throws SQLException {
         List<Persona> personas = personaDAO.obtenerTodas();
         listaPersonas.setAll(personas);
         tabla.setItems(listaPersonas);
     }
 
+    /**
+     * Evento que se dispara al hacer clic en el botón para agregar una nueva persona.
+     * Abre una ventana modal para ingresar los datos de la nueva persona y agregarlo a la bd.
+     *
+     * @param event Evento de acción que ocurre al hacer clic en el botón
+     */
     @FXML
     void agregarPersona(ActionEvent event)  {
-        mostrarFormularioPersona(null);
+        mostrarFormularioPersona("Agregar Persona",null);
     }
 
+    /**
+     * Acción que se ejecuta al hacer clic en el botón "Modificar". Abre una ventana modal
+     * para permitir la modificación de los datos de la persona seleccionada.
+     *
+     * @param event Evento que se dispara al hacer clic en el botón.
+     */
     @FXML
     void modificar(ActionEvent event) {
         Persona personaSeleccionada = tabla.getSelectionModel().getSelectedItem();
         if (personaSeleccionada != null) {
-            mostrarFormularioPersona(personaSeleccionada);
+            mostrarFormularioPersona("Modificar persona",personaSeleccionada);
         } else {
-            mostrarAlerta("Seleccione una persona para modificar.");
+            mostrarAlert(null, Alert.AlertType.WARNING,"","Seleccione una persona para modificar.");
         }
     }
 
-    private void mostrarFormularioPersona(Persona persona) {
+    /**
+     * Método que abre una ventana modal para agregar o modificar una persona.
+     * La ventana se carga desde un archivo FXML, y se pasa la lista de personas
+     * al controlador del modal para que pueda gestionar los datos.
+     *
+     * @param titulo El título de la ventana modal.
+     * @param persona La persona a modificar, o null si se está agregando una nueva.
+     */
+    private void mostrarFormularioPersona(String titulo, Persona persona) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/eu/andreatt/ejercicioh_dein/fxml/modalH.fxml"));
             Parent root = loader.load();
@@ -126,23 +148,31 @@ public class HelloController {
                 }
             }
         } catch (Exception e) {
-            mostrarAlerta("Error: " + e.getMessage());
+            mostrarAlert(null, Alert.AlertType.ERROR,"ERROR","Error: " + e.getMessage());
         }
     }
 
+    /**
+     * Acción que se ejecuta al hacer clic en el botón "Eliminar". Elimina la persona seleccionada
+     * de la base de datos después de confirmar la acción a través de una ventana emergente y lo refleja en la tabla.
+     *
+     * @param event Evento que se dispara al hacer clic en el botón.
+     */
     @FXML
     void eliminar(ActionEvent event) {
         Persona personaSeleccionada = tabla.getSelectionModel().getSelectedItem();
         if (personaSeleccionada != null) {
-            confirmarEliminacion(event, personaSeleccionada);
+
             try {
+                confirmarEliminacion(event, personaSeleccionada);
                 personaDAO.eliminar(personaSeleccionada.getId());
                 listaPersonas.remove(personaSeleccionada);
+
             } catch (SQLException e) {
-                mostrarAlerta("Error al eliminar: " + e.getMessage());
+                mostrarAlert(null, Alert.AlertType.ERROR,"ERROR","Error al eliminar: " + e.getMessage());
             }
         } else {
-            mostrarAlerta("Seleccione una persona para eliminar.");
+            mostrarAlert(null, Alert.AlertType.ERROR,"ERROR","Seleccione una persona para eliminar.");
         }
     }
 
@@ -164,11 +194,21 @@ public class HelloController {
         }
     }
 
-    private void mostrarAlerta(String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(null);
-        alert.setContentText(mensaje);
-        alert.showAndWait();
+
+    /**
+     * Muestra una alerta de acuerdo al tipo, título y contenido especificados.
+     *
+     * @param win       La ventana sobre la que se mostrará la alerta.
+     * @param alertType El tipo de alerta a mostrar.
+     * @param title     El título de la alerta.
+     * @param content   El contenido de la alerta.
+     */
+    private void mostrarAlert(Window win, Alert.AlertType alertType, String title, String content) {
+        Alert alert = new Alert(alertType); // Crea una nueva alerta
+        alert.initOwner(win); // Establece la ventana principal
+        alert.setHeaderText(null); // Sin encabezado
+        alert.setTitle(title); // Establece el título
+        alert.setContentText(content); // Establece el contenido
+        alert.showAndWait(); // Muestra la alerta y espera a que se cierre
     }
 }
