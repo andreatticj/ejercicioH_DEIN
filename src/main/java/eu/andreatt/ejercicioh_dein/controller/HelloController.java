@@ -164,15 +164,18 @@ public class HelloController {
         if (personaSeleccionada != null) {
 
             try {
-                confirmarEliminacion(event, personaSeleccionada);
-                personaDAO.eliminar(personaSeleccionada.getId());
-                listaPersonas.remove(personaSeleccionada);
+                // Verifica si el usuario acepta o cancela la eliminación
+                boolean confirmacion = confirmarEliminacion(event, personaSeleccionada);
+                if (confirmacion) {
+                    personaDAO.eliminar(personaSeleccionada.getId());
+                    listaPersonas.remove(personaSeleccionada);
+                }
 
             } catch (SQLException e) {
-                mostrarAlert(null, Alert.AlertType.ERROR,"ERROR","Error al eliminar: " + e.getMessage());
+                mostrarAlert(null, Alert.AlertType.ERROR, "ERROR", "Error al eliminar: " + e.getMessage());
             }
         } else {
-            mostrarAlert(null, Alert.AlertType.ERROR,"ERROR","Seleccione una persona para eliminar.");
+            mostrarAlert(null, Alert.AlertType.ERROR, "ERROR", "Seleccione una persona para eliminar.");
         }
     }
 
@@ -181,18 +184,21 @@ public class HelloController {
      *
      * @param event             El evento que desencadena la acción.
      * @param personaSeleccionada La persona que se va a eliminar.
+     * @return true si se confirma la eliminación, false si se cancela.
      */
-    private void confirmarEliminacion(ActionEvent event, Persona personaSeleccionada) {
+    private boolean confirmarEliminacion(ActionEvent event, Persona personaSeleccionada) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION); // Crea una alerta de confirmación
         alert.setTitle("Confirmar eliminación"); // Título de la alerta
         alert.setHeaderText(null); // Sin encabezado
         alert.setContentText("¿Estás seguro de que deseas eliminar a " + personaSeleccionada.getNombre() + "?"); // Contenido de la alerta
 
         // Muestra la alerta y espera la respuesta
-        if (alert.showAndWait().get() == ButtonType.OK) {
-            tabla.getItems().remove(personaSeleccionada); // Elimina la persona de la lista
-        }
+        ButtonType resultado = alert.showAndWait().orElse(ButtonType.CANCEL); // Si no selecciona nada, es CANCEL
+
+        // Devuelve true si el usuario selecciona OK, de lo contrario false
+        return resultado == ButtonType.OK;
     }
+
 
 
     /**
